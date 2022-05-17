@@ -2,6 +2,8 @@ from tkinter import *
 from tkinter.filedialog import *
 from tkinter.messagebox import *
 
+filename = "Arquivo Padrão"
+
 
 # Classe para criação dos principais elementos gráficos.
 class MainDesign:
@@ -12,7 +14,7 @@ class MainDesign:
 
     def createAppScreen(self):
         # Função que define as caracteristicas da tela principal.
-        root.title("Editor De Texto Python")
+        self.titleSync("Arquivo Padrão")
         root.minsize(width=self.screenWidth, height=self.screenHeight)
         root.maxsize(width=self.screenWidth, height=self.screenHeight)
         root.tk_setPalette(background='dimgrey', activeBackground='white', activeForeground='black',
@@ -25,10 +27,16 @@ class MainDesign:
         menuNavbar.add_command(label="Novo Arquivo", command=FileAdm().createFile, font=("Arial", 10))
         menuNavbar.add_command(label="Abrir Arquivo", command=FileAdm().openFile, font=("Arial", 10))
         menuNavbar.add_command(label="Salvar", command=FileAdm().saveFile, font=("Arial", 10))
-        menuNavbar.add_command(label="Sair", command=ErrorAdm("Fechar Programa ?", "Seu Progresso Não Será Salvo !").msgShowCloseProgram,
+        menuNavbar.add_command(label="Salvar Como", command=FileAdm().saveFileAs, font=("Arial", 10))
+        menuNavbar.add_command(label="Sair", command=ErrorAdm("Deseja Sair?", "Seu progresso não será salvo !").msgShowCloseProgram,
                                font=("Arial", 10))
         navbar.add_cascade(label="Arquivos", menu=menuNavbar)
         root.config(menu=navbar)
+
+    def titleSync(self, title):
+        global filename
+        filename = title
+        root.title(f"Editor de Texto Python - {filename}")
 
 
 # Classe para gerenciamento de arquivos.
@@ -42,27 +50,42 @@ class FileAdm:
         if msgCreate == 'yes':
             try:
                 mainText.delete(0.0, END)
+                textEditor.titleSync("Novo arquivo")
             except:
-                ErrorAdm("Erro ao Criar Arquivo", "Impossível Criar Novo Arquivo !!!").msgShowError()
+                ErrorAdm("[Erro] ao Criar o Arquivo", "Impossível criar novo arquivo !").msgShowError()
+
+    def saveFileAs(self):
+        # Função que salva um arquivo do jeito necessário.
+        try:
+            text = mainText.get(0.0, END)
+            with asksaveasfile(mode='w', defaultextension='.txt') as file:
+                file.write(text)
+            textEditor.titleSync(file.name)
+        except:
+            ErrorAdm("[Erro] ao Salvar o Arquivo", "Impossível salvar o arquivo !").msgShowError()
 
     def saveFile(self):
         # Função que salva um arquivo.
-        file = asksaveasfile(mode='w', defaultextension='.txt')
-        text = mainText.get(0.0, END)
+        global filename
         try:
-            file.write(text)
+            text = mainText.get(0.0, END)
+            with open(filename, 'w') as file:
+                file.write(text)
+            textEditor.titleSync(file.name)
         except:
-            ErrorAdm("Erro ao Salvar", "Impossível Salvar o Arquivo !!!").msgShowError()
+            ErrorAdm("[Erro] ao Salvar o Arquivo", "Impossível salvar o arquivo !").msgShowError()
 
     def openFile(self):
         # Função que abre um arquivo para edição.
         try:
-            file = askopenfile(mode='r')
-            text = file.read()
-            mainText.delete(0.0, END)
-            mainText.insert(0.0, text)
+            # file = askopenfile(mode='r')
+            with askopenfile(mode='r') as file:
+                text = file.read()
+                mainText.delete(0.0, END)
+                mainText.insert(0.0, text)
+            textEditor.titleSync(file.name)
         except:
-            ErrorAdm("Erro ao Abrir Arquivo", "Impossível Abrir o Arquivo !!!").msgShowError()
+            ErrorAdm("[Erro] ao Abrir o Arquivo", "Impossível Abrir o arquivo !").msgShowError()
 
 
 # Classe para gerenciamento de erros.
@@ -83,18 +106,17 @@ class ErrorAdm:
             root.quit()
 
 
-if __name__ == "__main__":
-    # Criação da Tela Principal.
-    root = Tk()
-    textEditor = MainDesign(500, 500)
-    textEditor.createAppScreen()
+# Criação da Tela Principal.
+root = Tk()
+textEditor = MainDesign(600, 600)
+textEditor.createAppScreen()
 
-    # Criação da caixa de texto.
-    mainText = Text(root, width=500, height=500, font=("Arial", 20))
-    mainText.pack()
+# Criação da caixa de texto.
+mainText = Text(root, width=600, height=600, font=("Arial", 20))
+mainText.pack()
 
-    # Criação da barra de navegação.
-    textEditor.createAppNavbar()
+# Criação da barra de navegação.
+textEditor.createAppNavbar()
 
-    # Exibe a tela.
-    root.mainloop()
+# Exibe a tela.
+root.mainloop()
